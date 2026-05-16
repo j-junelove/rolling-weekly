@@ -1271,8 +1271,15 @@ sb.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session) {
     currentUser = session.user;
     showApp();
-    init();
+    setLoading(true);
+    remoteLoad().then(remote => {
+      setLoading(false);
+      if (remote) { state = remote; localSave(state); render(); }
+      else { remoteSave(state); }
+    });
+    render();
   } else if (event === 'SIGNED_OUT') {
+    currentUser = null;
     showLoginScreen();
   }
 });
