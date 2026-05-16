@@ -817,6 +817,7 @@ async function remoteSave(s) {
   try {
     await sb.from('rolling_weekly').upsert({
       id: currentUser.id,
+      user_id: currentUser.id,
       data: s,
       updated_at: new Date().toISOString()
     });
