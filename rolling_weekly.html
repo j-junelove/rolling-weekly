@@ -699,6 +699,10 @@
         <span class="sym-icon">—</span>
         <span class="sym-label">won't do</span>
       </button>
+      <button class="sym-btn is-clear" onclick="pickSymbol('')" style="grid-column:1/-1">
+        <span class="sym-icon" style="font-size:0.7rem;color:var(--rule)">✕</span>
+        <span class="sym-label">clear</span>
+      </button>
     </div>
     <button class="popup-cancel" onclick="closeSymbolPicker()">cancel</button>
   </div>
@@ -1032,7 +1036,10 @@ function pickSymbol(sym) {
   const days = task.schedule[state.weekStart];
   const cdKey = `${state.weekStart}_${dayIdx}`;
 
-  if (days[dayIdx] === sym) {
+  if (sym === '') {
+    if (RESOLVED.includes(days[dayIdx])) delete task.completedDates[cdKey];
+    days[dayIdx] = '';
+  } else if (days[dayIdx] === sym) {
     days[dayIdx] = '';
     if (RESOLVED.includes(sym)) delete task.completedDates[cdKey];
   } else {
@@ -1242,49 +1249,32 @@ function renderArchive() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-
-  if (!session) {
-    showLoginScreen();
-    return;
-  }
-
+async function loadAndRender(session) {
   currentUser = session.user;
   showApp();
   render();
-
   setLoading(true);
   const remote = await remoteLoad();
   setLoading(false);
-
-  if (remote) {
-    state = remote;
-    localSave(state);
-    render();
-  } else {
-    remoteSave(state);
-  }
+  if (remote) { state = remote; localSave(state); render(); }
+  else { remoteSave(state); }
 }
 
 sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    currentUser = session.user;
-    showApp();
-    setLoading(true);
-    remoteLoad().then(remote => {
-      setLoading(false);
-      if (remote) { state = remote; localSave(state); render(); }
-      else { remoteSave(state); }
-    });
-    render();
-  } else if (event === 'SIGNED_OUT') {
+  if (session) {
+    loadAndRender(session);
+  } else {
     currentUser = null;
     showLoginScreen();
   }
 });
 
-init();
+// kick off by checking current session
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (!session) showLoginScreen();
+});
+
+// end
 </script>
 </body>
 </html>
