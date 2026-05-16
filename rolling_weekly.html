@@ -741,19 +741,20 @@ const SUPABASE_URL = 'https://nxlnewbmvmuuypzortqx.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bG5ld2Jtdm11dXlwem9ydHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NTUzNzcsImV4cCI6MjA5NDUzMTM3N30.GHsY-tWpKuBE4ckZi6RHvo1C-41sIY4iv82GMRZ0c-s';
 const ROW_ID = 'main';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
 
 async function signInWithGoogle() {
-  await supabase.auth.signInWithOAuth({
+  await sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.href }
   });
 }
+window.signInWithGoogle = signInWithGoogle;
 
 async function signOut() {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   window.location.reload();
 }
 
@@ -810,7 +811,7 @@ async function remoteLoad() {
 async function remoteSave(s) {
   if (!currentUser) return;
   try {
-    await supabase.from('rolling_weekly').upsert({
+    await sb.from('rolling_weekly').upsert({
       id: currentUser.id,
       data: s,
       updated_at: new Date().toISOString()
@@ -1242,7 +1243,7 @@ function renderArchive() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
 
   if (!session) {
     showLoginScreen();
@@ -1266,7 +1267,7 @@ async function init() {
   }
 }
 
-supabase.auth.onAuthStateChange((event, session) => {
+sb.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session) {
     currentUser = session.user;
     showApp();
