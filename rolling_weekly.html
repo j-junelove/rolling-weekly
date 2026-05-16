@@ -807,18 +807,10 @@ async function remoteLoad() {
       .select('data')
       .eq('user_id', currentUser.id)
       .single();
-    if (error) {
-      const dbg = document.getElementById('debug-msg');
-      if (dbg) dbg.textContent = 'remote error: ' + JSON.stringify(error);
-      return null;
-    }
+    if (error) return null;
     if (!data) return null;
     return data.data;
-  } catch(e) {
-    const dbg = document.getElementById('debug-msg');
-    if (dbg) dbg.textContent = 'remote exception: ' + e.message;
-    return null;
-  }
+  } catch(e) { return null; }
 }
 
 async function remoteSave(s) {
@@ -1263,25 +1255,14 @@ async function loadAndRender(session) {
   currentUser = session.user;
   showApp();
   render();
-  
-  // visible debug — remove later
-  const dbg = document.createElement('div');
-  dbg.id = 'debug-msg';
-  dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1a18;color:#f5f0e8;font-size:0.7rem;padding:8px 12px;z-index:999;font-family:monospace;word-break:break-all';
-  dbg.textContent = 'loading remote... user: ' + currentUser.id.slice(0,8);
-  document.body.appendChild(dbg);
-
   setLoading(true);
   const remote = await remoteLoad();
   setLoading(false);
-
   if (remote) {
-    dbg.textContent = 'remote ok — tasks: ' + (remote.tasks?.length || 0);
     state = remote;
     localSave(state);
     render();
   } else {
-    dbg.textContent = 'remote returned null — pushing local';
     remoteSave(state);
   }
 }
