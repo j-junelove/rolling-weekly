@@ -1252,12 +1252,20 @@ function renderArchive() {
 async function loadAndRender(session) {
   currentUser = session.user;
   showApp();
+  // show local data instantly while we fetch remote
   render();
   setLoading(true);
   const remote = await remoteLoad();
   setLoading(false);
-  if (remote) { state = remote; localSave(state); render(); }
-  else { remoteSave(state); }
+  if (remote) {
+    // always prefer remote when signed in
+    state = remote;
+    localSave(state);
+    render();
+  } else {
+    // no remote data yet — push local up
+    remoteSave(state);
+  }
 }
 
 sb.auth.onAuthStateChange((event, session) => {
