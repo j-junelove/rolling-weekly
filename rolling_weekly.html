@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Rolling Weekly</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -733,8 +734,8 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+const DAYS = ['S','M','T','W','T','F','S'];
 const RESOLVED = ['x', 'dash', 'back'];
 const SUPABASE_URL = 'https://nxlnewbmvmuuypzortqx.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bG5ld2Jtdm11dXlwem9ydHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NTUzNzcsImV4cCI6MjA5NDUzMTM3N30.GHsY-tWpKuBE4ckZi6RHvo1C-41sIY4iv82GMRZ0c-s';
