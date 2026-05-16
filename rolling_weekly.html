@@ -619,6 +619,7 @@
           <div class="week-label" id="week-label">—</div>
           <button class="week-arrow" onclick="shiftWeek(1)" title="next week">›</button>
         </div>
+        <div id="sync-indicator" style="font-size:0.55rem;color:var(--rule);letter-spacing:0.08em;margin-top:2px"></div>
       </div>
       <div class="header-actions">
         <button class="btn btn-ghost" onclick="showArchive()">Archive</button>
@@ -724,13 +725,19 @@
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const DAYS = ['S','M','T','W','T','F','S'];
 const RESOLVED = ['x', 'dash', 'back'];
+const SUPABASE_URL = 'https://nxlnewbmvmuuypzortqx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_AEyT6cwgOZk_WFXe51B_yA_eI2a_HQz';
+const ROW_ID = 'main';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-function loadState() {
+function emptyState() {
+  return { weekStart: getThisSunday(), tasks: [], archive: [] };
+}
+
+function localLoad() {
   try {
     const raw = localStorage.getItem('rollingList_v2');
     if (raw) return JSON.parse(raw);
-    // migrate v1 data if present
     const old = localStorage.getItem('rollingList_v1');
     if (old) {
       const v1 = JSON.parse(old);
@@ -742,16 +749,52 @@ function loadState() {
       return v1;
     }
   } catch(e) {}
-  return { weekStart: getThisSunday(), tasks: [], archive: [] };
+  return emptyState();
+}
+
+function localSave(s) {
+  localStorage.setItem('rollingList_v2', JSON.stringify(s));
+}
+
+async function remoteLoad() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rolling_weekly?id=eq.${ROW_ID}&select=data`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const rows = await res.json();
+    if (rows && rows.length > 0 && rows[0].data) return rows[0].data;
+  } catch(e) {}
+  return null;
+}
+
+async function remoteSave(s) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/rolling_weekly`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ id: ROW_ID, data: s, updated_at: new Date().toISOString() })
+    });
+  } catch(e) {}
 }
 
 function saveState() {
-  localStorage.setItem('rollingList_v2', JSON.stringify(state));
+  localSave(state);
+  remoteSave(state);
 }
 
-let state = loadState();
+let state = localLoad();
 let pickerCtx = null;
 let editCtx   = null;
+
+// show loading indicator while we check remote
+function setLoading(on) {
+  document.getElementById('sync-indicator').textContent = on ? 'syncing…' : '';
+}
 
 // ── DATE HELPERS ──────────────────────────────────────────────────────────────
 function getThisSunday() {
@@ -1161,8 +1204,26 @@ function renderArchive() {
   document.getElementById('archive-list').innerHTML = h;
 }
 
-// ── GO ────────────────────────────────────────────────────────────────────────
-render();
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // render immediately with local data so the app feels instant
+  render();
+  // then fetch remote and update if newer
+  setLoading(true);
+  const remote = await remoteLoad();
+  setLoading(false);
+  if (remote) {
+    // use remote data, save it locally too
+    state = remote;
+    localSave(state);
+    render();
+  } else {
+    // no remote data yet — push local data up
+    remoteSave(state);
+  }
+}
+
+init();
 </script>
 </body>
 </html>
