@@ -752,7 +752,7 @@ let currentUser = null;
 async function signInWithGoogle() {
   await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: { redirectTo: 'https://j-junelove.github.io/rolling-weekly/rolling_weekly.html' }
   });
 }
 window.signInWithGoogle = signInWithGoogle;
