@@ -856,6 +856,10 @@ function formatShort(str) {
   return parseDate(str).toLocaleDateString('en-US', { month:'short', day:'numeric' });
 }
 
+function formatArchiveDate(str) {
+  return parseDate(str).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
 function getWeekDates(ws) {
   return Array.from({length:7}, (_,i) => {
     const d = parseDate(ws);
@@ -1243,7 +1247,7 @@ function renderArchive() {
     for (const item of groups[k]) {
       h += `<div class="archive-item">
         <span class="archive-task">${esc(item.text)}</span>
-        <span class="archive-date">${item.symLabel || '×'} ${item.completedDate ? formatShort(item.completedDate) : '—'}</span>
+        <span class="archive-date">${item.symLabel || '×'} ${item.completedDate ? formatArchiveDate(item.completedDate) : '—'}</span>
       </div>`;
     }
   }
